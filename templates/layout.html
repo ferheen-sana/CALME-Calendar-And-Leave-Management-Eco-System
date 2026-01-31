@@ -1,0 +1,333 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CALME – Offline Leave Management</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background: #f4f6f9;
+            font-family: "Segoe UI", Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            height: 55px;
+            background: #0b3d91;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-left button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-right input {
+            height: 28px;
+            font-size: 13px;
+        }
+
+        /* ===== SIDEBAR ===== */
+        #sidebar {
+            width: 220px;
+            background: #0b3d91;
+            position: fixed;
+            top: 55px;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+            transition: 0.3s;
+        }
+
+        #sidebar.hide {
+            margin-left: -220px;
+        }
+
+        #sidebar a {
+            display: block;
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        #sidebar a:hover {
+            background: #084298;
+        }
+
+        /* ===== MAIN (SCROLL OWNER) ===== */
+        #main {
+            position: fixed;
+            top: 55px;
+            left: 220px;
+            right: 0;
+            bottom: 36px;
+            padding: 20px;
+            overflow-y: auto;
+            transition: 0.3s;
+            padding-bottom: 60px; /* ✅ FIX */
+        }
+
+        #main.full {
+            left: 0;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            height: 36px;
+            background: #0b3d91;
+            color: white;
+            text-align: center;
+            font-size: 12px;
+            line-height: 36px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        /* ===== FLOATING BTN ===== */
+        .floating-btn {
+            position: fixed;
+            bottom: 50px; /* above footer */
+            right: 20px;
+            background: #0b3d91;
+            color: white;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 1100;
+            text-decoration: none;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .floating-btn:hover {
+            background: #084298;
+            transform: scale(1.1);
+        }
+
+        /* ===== BELL SHAKE ===== */
+        .bell-shake {
+            animation: bell-shake 0.8s ease;
+        }
+
+        @keyframes bell-shake {
+            0% { transform: rotate(0deg) scale(1); }
+            20% { transform: rotate(15deg) scale(1.1); }
+            40% { transform: rotate(-15deg) scale(1.1); }
+            60% { transform: rotate(10deg) scale(1.05); }
+            80% { transform: rotate(-5deg) scale(1.05); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        .floating-btn span {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            display: inline-block;
+        }
+
+        /* ===== TOAST NOTIFICATION ===== */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #fff;
+            border-left: 6px solid #0b3d91;
+            padding: 14px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.2);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s ease;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast .toast-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .toast .toast-meta {
+            font-size: 12px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <button onclick="toggleSidebar()">☰</button>
+        <span>CALME – Offline Leave Management System</span>
+    </div>
+
+    <div class="header-right">
+        <input type="text" class="form-control form-control-sm" placeholder="Search">
+        <div>
+            <div>{{ request.user.username }}</div>
+            <small>{{ request.user.profile.role }}</small>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+    <a href="/">🏠 Dashboard</a>
+    <a href="/calendar/">📅 Calendar</a>
+    <a href="/apply/">✍ Apply Leave</a>
+    <a href="/history/">📄 Leave History</a>
+    <a href="/notifications/">🔔 Notifications</a>
+    <a href="/logout/">🚪 Logout</a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+    {% block content %}{% endblock %}
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    © ADA | CALME – Leave Management System
+</div>
+
+<!-- FLOATING NOTIFICATION BUTTON -->
+<a href="/notifications/" class="floating-btn" title="Notifications">
+    🔔
+    <span style="
+        position:absolute;
+        top:5px;
+        right:5px;
+        background:red;
+        color:white;
+        font-size:11px;
+        padding:2px 6px;
+        border-radius:50%;
+        display:none;
+    "></span>
+</a>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
+
+<script>
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("hide");
+    document.getElementById("main").classList.toggle("full");
+}
+
+/* HEADER SEARCH */
+document.querySelector('.header-right input').addEventListener('keyup', function () {
+    const searchText = this.value.toLowerCase();
+    const links = document.querySelectorAll('#sidebar a');
+    links.forEach(link => {
+        const text = link.textContent.toLowerCase();
+        link.style.display = text.includes(searchText) ? 'block' : 'none';
+    });
+});
+
+/* FLOATING BELL & TOAST NOTIFICATIONS */
+document.addEventListener("DOMContentLoaded", function(){
+    let bellSpan = document.querySelector(".floating-btn span");
+    let previousCount = 0;
+
+    const toastContainer = document.getElementById("toastContainer");
+
+    async function updateNotifications(){
+        try{
+            const res = await fetch("{% url 'leaves:employee_notifications_count' %}");
+            const data = await res.json();
+            const count = data.pending_count;
+
+            // Update bell count
+            if(count > 0){
+                bellSpan.innerText = count;
+                bellSpan.style.display = "inline-block";
+
+                if(count > previousCount){
+                    bellSpan.classList.add("bell-shake");
+                    setTimeout(()=> bellSpan.classList.remove("bell-shake"), 1000);
+
+                    // Show toast for new notifications
+                    data.notifications.forEach(n => showToast(n));
+                }
+            } else {
+                bellSpan.style.display = "none";
+            }
+
+            previousCount = count;
+
+        } catch(err){
+            console.error("Error fetching employee notifications:", err);
+        }
+    }
+
+    function showToast(notification){
+        const toast = document.createElement("div");
+        toast.className = "toast show";
+        toast.innerHTML = `
+            <div class="toast-title">Leave ${notification.status}: ${notification.leave_type}</div>
+            <div class="toast-meta">${notification.start_date} → ${notification.end_date}</div>
+        `;
+        toastContainer.appendChild(toast);
+
+        setTimeout(()=> {
+            toast.classList.remove("show");
+            toast.remove();
+        }, 5000);
+    }
+
+    updateNotifications(); // initial fetch
+    setInterval(updateNotifications, 5000); // every 5 seconds
+});
+</script>
+
+</body>
+</html>

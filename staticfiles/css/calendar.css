@@ -1,0 +1,41 @@
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.month-card {
+    background: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,.1);
+}
+
+.weekdays, .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.weekdays span {
+    font-weight: bold;
+    text-align: center;
+}
+
+.day {
+    height: 35px;
+    margin: 2px;
+    text-align: center;
+    line-height: 35px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.day:hover {
+    transform: scale(1.1);
+}
+
+.ada { background: green !important; color: white; }
+.rh { background: yellow !important; }
+.conflict { background: red !important; color: white; }
+
+.empty { background: transparent; }

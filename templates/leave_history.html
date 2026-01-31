@@ -1,0 +1,256 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block content %}
+
+<!-- ================= HIDDEN DATA FOR EXPORT ================= -->
+<input type="hidden" id="empName" value="{{ employee_name }}">
+<input type="hidden" id="empDesignation" value="{{ designation }}">
+<input type="hidden" id="managerName" value="{{ manager_name }}">
+<input type="hidden" id="todayDate" value="{% now 'd M Y' %}">
+
+<style>
+.page-title{
+    font-weight:700;
+    font-size:24px;
+    color:#0b3d91;
+    margin-bottom:15px;
+}
+
+.filter-box{
+    background:#ffffff;
+    padding:18px;
+    border-radius:14px;
+    box-shadow:0 6px 16px rgba(0,0,0,.15);
+    margin-bottom:20px;
+}
+
+.table-box{
+    background:#fff;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 8px 20px rgba(0,0,0,.18);
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+thead{
+    background:#0b3d91;
+    color:#fff;
+}
+
+th, td{
+    padding:10px;
+    font-size:14px;
+    text-align:center;
+    border-bottom:1px solid #ddd;
+}
+
+.status-approved{
+    background:#22c55e;
+    color:#fff;
+    padding:4px 10px;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.status-pending{
+    background:#facc15;
+    color:#000;
+    padding:4px 10px;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.status-rejected{
+    background:#ef4444;
+    color:#fff;
+    padding:4px 10px;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.export-btns button{
+    margin-left:8px;
+    font-weight:600;
+}
+</style>
+
+<!-- ================= TITLE ================= -->
+<div class="page-title">📊 Leave History</div>
+
+<!-- ================= FILTER ================= -->
+<div class="filter-box">
+<form method="get">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Year</label>
+            <select name="year" class="form-select" onchange="this.form.submit()">
+                <option value="">All</option>
+                {% for y in years %}
+                    <option value="{{ y }}" {% if request.GET.year == y|stringformat:"s" %}selected{% endif %}>
+                        {{ y }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Month</label>
+            <select name="month" class="form-select" onchange="this.form.submit()">
+                <option value="">All</option>
+                {% for m in months %}
+                    <option value="{{ m.0 }}" {% if request.GET.month == m.0|stringformat:"s" %}selected{% endif %}>
+                        {{ m.1 }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-6 text-end export-btns">
+            <button type="button" class="btn btn-success" onclick="exportExcel()">⬇ Excel (Letter)</button>
+            <button type="button" class="btn btn-danger" onclick="exportPDF()">⬇ PDF (Letter)</button>
+            <button type="button" class="btn btn-primary" onclick="exportWord()">⬇ Word (Letter)</button>
+        </div>
+    </div>
+</form>
+</div>
+
+<!-- ================= TABLE ================= -->
+<div class="table-box">
+<table id="leaveTable">
+    <thead>
+        <tr>
+            <th>Applied On</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Type</th>
+            <th>Days</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for leave in leaves %}
+        <tr>
+            <td>{{ leave.applied_on|date:"d M Y" }}</td>
+            <td>{{ leave.start_date|date:"d M Y" }}</td>
+            <td>{{ leave.end_date|date:"d M Y" }}</td>
+            <td>{{ leave.leave_type }}</td>
+            <td>{{ leave.total_days }}</td>
+
+            <td>
+                {% if leave.status == "APPROVED" %}
+                    <span class="status-approved">Approved</span>
+                {% elif leave.status == "REJECTED" %}
+                    <span class="status-rejected">Rejected</span>
+                {% else %}
+                    <span class="status-pending">Pending</span>
+                {% endif %}
+            </td>
+
+            <td>
+              {% if leave.status == "PENDING" %}
+                <a href="{% url 'leaves:delete_leave' leave.id %}"
+                    class="btn btn-sm btn-danger"
+                    onclick="return confirm('Delete this leave application?');">
+                    🗑 Delete
+                </a>
+              {% else %}
+                  —
+              {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7">No leave records found</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- ================= OFFLINE JS ================= -->
+<script src="{% static 'js/xlsx.full.min.js' %}"></script>
+<script src="{% static 'js/jspdf.umd.min.js' %}"></script>
+
+<script>
+function getLeaves(){
+    const rows = document.querySelectorAll("#leaveTable tbody tr");
+    let data = [];
+
+    rows.forEach(r=>{
+        if(r.children.length < 7) return;
+        if(r.innerText.includes("No leave")) return;
+
+        data.push({
+            from: r.children[1].innerText,
+            to: r.children[2].innerText,
+            days: r.children[4].innerText,
+            type: r.children[3].innerText,
+            status: r.children[5].innerText
+        });
+    });
+    return data;
+}
+</script>
+
+<!-- ================= PDF EXPORT ================= -->
+<script>
+function exportPDF(){
+    const leaves = getLeaves();
+    if(!leaves.length){ alert("No leave records"); return; }
+
+    const jsPDF = window.jspdf.jsPDF;
+    const doc = new jsPDF();
+    let y = 20;
+
+    leaves.forEach(l=>{
+        doc.text(`Leave from ${l.from} to ${l.to} (${l.days} days)`, 14, y);
+        y += 10;
+    });
+
+    doc.save("Leave_Letter.pdf");
+}
+</script>
+
+<!-- ================= EXCEL EXPORT ================= -->
+<script>
+function exportExcel(){
+    const leaves = getLeaves();
+    if(!leaves.length){ alert("No leave records"); return; }
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(leaves);
+    XLSX.utils.book_append_sheet(wb, ws, "Leaves");
+    XLSX.writeFile(wb, "Leave_Letter.xlsx");
+}
+</script>
+
+<!-- ================= WORD EXPORT ================= -->
+<script>
+function exportWord(){
+    const leaves = getLeaves();
+    if(!leaves.length){ alert("No leave records"); return; }
+
+    let content = "<h2>Leave Applications</h2>";
+    leaves.forEach(l=>{
+        content += `<p>Leave from ${l.from} to ${l.to} (${l.days} days)</p>`;
+    });
+
+    const blob = new Blob(['\ufeff', content], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Leave_Letter.doc";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h3>👨‍💼 All Employee Leave Records</h3>
+
+<div class="export-buttons">
+    <a href="{% url 'export_manager_excel' %}" class="btn green">⬇ Excel</a>
+    <a href="{% url 'export_manager_pdf' %}" class="btn red">⬇ PDF</a>
+</div>
+
+<table class="table">
+    <tr>
+        <th>Employee</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Days</th>
+        <th>Status</th>
+    </tr>
+
+    {% for l in leaves %}
+    <tr>
+        <td>{{ l.user.username }}</td>
+        <td>{{ l.start_date }}</td>
+        <td>{{ l.end_date }}</td>
+        <td>{{ l.total_days }}</td>
+        <td>{{ l.status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

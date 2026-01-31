@@ -1,0 +1,22 @@
+.fc {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+.fc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.fc-timegrid-slot {
+  height: 40px;
+}
+.fc-event {
+  background: #2563eb;
+  border: none;
+  border-radius: 6px;
+  padding: 2px 4px;
+  color: #fff;
+}
+.fc-scrollgrid {
+  border: 1px solid #e5e7eb;
+}

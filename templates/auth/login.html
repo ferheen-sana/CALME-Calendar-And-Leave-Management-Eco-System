@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CALME | Login</title>
+
+    {% load static %}
+
+    <!-- OFFLINE BOOTSTRAP -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+
+    <style>
+        body{
+            height:100vh;
+            margin:0;
+            background: url("{% static 'img/bg-jet.jpg' %}");
+            background-size:cover;
+            background-position:center;
+            background-repeat:no-repeat;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        /* WATERMARK IMAGE (SOFT) */
+        body::before{
+            content:"";
+            position:fixed;
+            inset:0;
+            background:url("{% static 'img/bg-jet.jpg' %}") center/500px no-repeat;
+            opacity:0.06;
+            pointer-events:none;
+        }
+
+        .card{
+            border-radius:16px;
+            z-index:2;
+            background:#ffffff;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card p-4 shadow" style="width:360px">
+    <div class="text-center">
+        <img src="{% static 'img/ada.png' %}" width="70" alt="ADA Logo">
+        <h5 class="mt-2 fw-bold">ADA – CALME</h5>
+    </div>
+
+    {% for msg in messages %}
+        <div class="alert alert-danger mt-2">{{ msg }}</div>
+    {% endfor %}
+
+    <form method="post">
+        {% csrf_token %}
+        <input class="form-control mb-2" name="username" placeholder="Username" required>
+        <input class="form-control mb-3" name="password" type="password" placeholder="Password" required>
+        <button class="btn btn-primary w-100 fw-semibold">Login</button>
+    </form>
+
+    <div class="text-center mt-3">
+        <a href="/register/">New user? Register</a>
+    </div>
+</div>
+
+</body>
+</html>

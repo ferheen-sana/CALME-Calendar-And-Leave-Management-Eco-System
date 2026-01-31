@@ -1,0 +1,406 @@
+{% extends "layout_manager.html" %}
+{% block content %}
+
+<style>
+/* ================= PAGE WRAP ================= */
+.notify-wrap{
+    background:linear-gradient(135deg,#fff7ed,#fefce8);
+    padding:26px;
+    border-radius:26px;
+}
+
+/* ================= HEADER ================= */
+.notify-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:24px;
+}
+.notify-title{
+    font-size:24px;
+    font-weight:800;
+    color:#7c2d12;
+}
+.notify-count{
+    background:#7c2d12;
+    color:white;
+    padding:6px 14px;
+    border-radius:20px;
+    font-weight:700;
+    animation: bell-shake 1s infinite;
+}
+@keyframes bell-shake {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(15deg); }
+    50% { transform: rotate(-15deg); }
+    75% { transform: rotate(10deg); }
+    100% { transform: rotate(0deg); }
+}
+
+/* ================= STATS ================= */
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+    margin-bottom:30px;
+}
+.stat-card{
+    padding:20px;
+    border-radius:20px;
+    color:white;
+    box-shadow:0 12px 30px rgba(0,0,0,.15);
+    transition: transform .3s ease, box-shadow .3s ease;
+}
+.stat-card:hover{
+    transform: translateY(-5px);
+    box-shadow:0 20px 45px rgba(0,0,0,.2);
+}
+.stat-pending{ background:linear-gradient(135deg,#fb923c,#f97316); }
+.stat-approved{ background:linear-gradient(135deg,#22c55e,#15803d); }
+.stat-rejected{ background:linear-gradient(135deg,#ef4444,#991b1b); }
+.stat-card h5{ font-size:14px; opacity:.9; }
+.stat-card h2{ font-size:32px; font-weight:800; }
+
+/* ================= TIMELINE ================= */
+.timeline{
+    position:relative;
+}
+.timeline::before{
+    content:"";
+    position:absolute;
+    left:20px;
+    top:0;
+    width:4px;
+    height:100%;
+    background:#fed7aa;
+    border-radius:10px;
+}
+
+/* ================= NOTIFICATION CARD ================= */
+.notify-card{
+    background:white;
+    border-radius:22px;
+    padding:18px 22px;
+    margin-left:40px;
+    margin-bottom:18px;
+    box-shadow:0 10px 28px rgba(0,0,0,.1);
+    position:relative;
+    transition:.5s ease;
+    opacity:0;
+    transform: translateY(20px);
+}
+.notify-card.show{
+    opacity:1;
+    transform: translateY(0);
+    animation: slide-in 0.5s ease forwards;
+}
+.notify-card.unread{
+    border-left:6px solid #7c2d12;
+    background:#fff7ed;
+}
+@keyframes slide-in {
+    0% { opacity:0; transform:translateY(20px);}
+    100% { opacity:1; transform:translateY(0);}
+}
+
+/* DOT */
+.notify-dot{
+    position:absolute;
+    left:-38px;
+    top:24px;
+    width:18px;
+    height:18px;
+    background:#7c2d12;
+    border-radius:50%;
+}
+
+/* CONTENT */
+.notify-name{
+    font-weight:700;
+    color:#0f172a;
+}
+.notify-meta{
+    font-size:12px;
+    color:#64748b;
+    margin-top:4px;
+}
+
+/* BADGES */
+.badge{
+    border-radius:18px;
+    padding:6px 14px;
+    font-size:12px;
+    font-weight:700;
+}
+.badge-cl{ background:#eef2ff; color:#4338ca; }
+.badge-rh{ background:#fefce8; color:#a16207; }
+.status-pending{ background:#fffbeb; color:#b45309; }
+.status-approved{ background:#ecfdf5; color:#166534; }
+.status-rejected{ background:#fef2f2; color:#991b1b; }
+
+/* EMPTY */
+.empty{
+    text-align:center;
+    padding:50px;
+    color:#64748b;
+}
+
+/* DATE GROUPING */
+.date-group{
+    font-weight:700;
+    margin:20px 0 10px 60px;
+    color:#7c2d12;
+    font-size:14px;
+}
+
+/* ================= MODERN SELECT ================= */
+.custom-select-wrapper {
+    position: relative;
+    width: 250px;
+}
+.custom-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: #fff url("data:image/svg+xml,%3Csvg fill='none' stroke='%237c2d12' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") no-repeat right 10px center;
+    background-size: 16px;
+    border: 2px solid #7c2d12;
+    border-radius: 12px;
+    padding: 8px 40px 8px 12px;
+    font-weight:600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.custom-select:focus {
+    outline: none;
+    border-color: #f97316;
+    box-shadow: 0 0 8px rgba(249,115,22,0.4);
+}
+.custom-select:hover {
+    border-color: #f97316;
+}
+
+/* ================= TOAST ================= */
+.toast {
+    position:fixed;
+    top:80px;
+    right:20px;
+    background:#fff;
+    border-left:6px solid #7c2d12;
+    padding:14px 20px;
+    border-radius:12px;
+    box-shadow:0 8px 24px rgba(0,0,0,.2);
+    opacity:0;
+    transform:translateX(100%);
+    transition: all 0.5s ease;
+    z-index:2000;
+}
+.toast.show {
+    opacity:1;
+    transform:translateX(0);
+}
+.toast .toast-title{
+    font-weight:700;
+    margin-bottom:4px;
+}
+.toast .toast-meta{
+    font-size:12px;
+    color:#64748b;
+}
+</style>
+
+<div class="notify-wrap">
+
+    <!-- HEADER -->
+    <div class="notify-header">
+        <div class="notify-title">🔔 Manager Notifications</div>
+        <div id="bellCount" class="notify-count">
+            {{ pending_count }} Pending
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+        <div class="stat-card stat-pending">
+            <h5>Pending Requests</h5>
+            <h2>{{ pending_count }}</h2>
+        </div>
+        <div class="stat-card stat-approved">
+            <h5>Approved Total</h5>
+            <h2>{{ approved_count }}</h2>
+        </div>
+        <div class="stat-card stat-rejected">
+            <h5>Rejected Total</h5>
+            <h2>{{ rejected_count }}</h2>
+        </div>
+    </div>
+
+    <!-- FILTER -->
+    <div style="margin-bottom:20px; display:flex; align-items:center; gap:12px;">
+        <label for="employeeFilter" style="font-weight:600; color:#7c2d12;">Filter by Employee:</label>
+        <div class="custom-select-wrapper">
+            <select id="employeeFilter" class="form-select custom-select">
+                <option value="">All Employees</option>
+                {% for emp in employees %}
+                <option value="{{ emp.id }}">{{ emp.get_full_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="timeline" id="notificationTimeline">
+
+        {% for leave in leaves %}
+            {% with leave.applied_on.date as ldate %}
+                {% ifchanged ldate %}
+                    <div class="date-group">
+                        {% if ldate == today %}Today{% elif ldate == yesterday %}Yesterday{% else %}{{ ldate|date:"M d, Y" }}{% endif %}
+                    </div>
+                {% endifchanged %}
+            {% endwith %}
+
+        <div class="notify-card {% if leave.status == 'PENDING' %}unread{% endif %}" data-employee="{{ leave.user.id }}" data-leave-id="{{ leave.id }}">
+            <div class="notify-dot"></div>
+
+            <div class="notify-name">
+                {{ leave.user.get_full_name|default:leave.user.username }}
+            </div>
+
+            <div style="margin-top:6px;">
+                {% if leave.leave_type == "CL" %}
+                    <span class="badge badge-cl">Casual Leave</span>
+                {% else %}
+                    <span class="badge badge-rh">Restricted Holiday</span>
+                {% endif %}
+
+                {% if leave.status == "PENDING" %}
+                    <span class="badge status-pending">Pending</span>
+                {% elif leave.status == "APPROVED" %}
+                    <span class="badge status-approved">Approved</span>
+                {% else %}
+                    <span class="badge status-rejected">Rejected</span>
+                {% endif %}
+            </div>
+
+            <div class="notify-meta">
+                {{ leave.start_date }} → {{ leave.end_date }}  
+                • {{ leave.applied_on|timesince }} ago
+            </div>
+
+            <div class="notify-meta">
+                <strong>Reason:</strong> {{ leave.reason|truncatechars:60 }}
+            </div>
+        </div>
+        {% empty %}
+            <div class="empty">
+                🎉 No new notifications
+            </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+<!-- ================= TOAST CONTAINER ================= -->
+<div id="toastContainer"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+    const timeline = document.getElementById("notificationTimeline");
+
+    // Animate initial cards
+    document.querySelectorAll(".notify-card").forEach((c,i)=>{
+        setTimeout(()=> c.classList.add("show"), i*100);
+    });
+
+    // Employee filter
+    const filter = document.getElementById("employeeFilter");
+    filter.addEventListener("change", function(){
+        const val = this.value;
+        document.querySelectorAll("#notificationTimeline .notify-card").forEach(card=>{
+            card.style.display = (val==="" || card.dataset.employee === val) ? "" : "none";
+        });
+    });
+
+    // Keep track of existing leaves
+    let existingLeaves = Array.from(document.querySelectorAll(".notify-card")).map(c=>c.dataset.leaveId);
+
+    // AJAX real-time fetch
+    async function fetchNotifications(){
+        const res = await fetch("{% url 'leaves:manager_notifications_json' %}");
+        const data = await res.json();
+
+        document.getElementById("bellCount").innerText = data.pending_count + " Pending";
+
+        data.leaves.forEach(l=>{
+            if(!existingLeaves.includes(String(l.id))){
+                addLeaveCard(l);
+                existingLeaves.push(String(l.id));
+                showToast(l);
+                const bell = document.getElementById("bellCount");
+                bell.classList.add("bell-shake");
+                setTimeout(()=> bell.classList.remove("bell-shake"), 2000);
+            }
+        });
+    }
+
+    setInterval(fetchNotifications, 5000);
+
+    // Add leave card dynamically with date grouping
+    function addLeaveCard(l){
+        const leaveDate = new Date(l.created_at).toISOString().slice(0,10);
+
+        // Check if date group exists
+        let dateGroup = Array.from(document.querySelectorAll(".date-group")).find(dg => dg.dataset.date===leaveDate);
+        if(!dateGroup){
+            dateGroup = document.createElement("div");
+            dateGroup.className = "date-group";
+            dateGroup.dataset.date = leaveDate;
+
+            const today = new Date().toISOString().slice(0,10);
+            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+
+            if(leaveDate===today) dateGroup.innerText = "Today";
+            else if(leaveDate===yesterday) dateGroup.innerText = "Yesterday";
+            else dateGroup.innerText = new Date(leaveDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+            timeline.prepend(dateGroup);
+        }
+
+        // Create card
+        const card = document.createElement("div");
+        card.className = "notify-card unread show";
+        card.dataset.employee = l.user_id;
+        card.dataset.leaveId = l.id;
+
+        card.innerHTML = `
+            <div class="notify-dot"></div>
+            <div class="notify-name">${l.full_name}</div>
+            <div style="margin-top:6px;">
+                ${l.leave_type==="CL"?'<span class="badge badge-cl">Casual Leave</span>':'<span class="badge badge-rh">Restricted Holiday</span>'}
+                <span class="badge status-pending">Pending</span>
+            </div>
+            <div class="notify-meta">${l.start_date} → ${l.end_date} • just now</div>
+            <div class="notify-meta"><strong>Reason:</strong> ${l.reason}</div>
+        `;
+        timeline.insertBefore(card, dateGroup.nextSibling);
+        setTimeout(()=> card.classList.add("show"), 50);
+    }
+
+    // Toast
+    function showToast(l){
+        const toast = document.createElement("div");
+        toast.className = "toast show";
+        toast.innerHTML = `
+            <div class="toast-title">New Leave: ${l.full_name}</div>
+            <div class="toast-meta">${l.leave_type} • ${l.start_date} → ${l.end_date}</div>
+        `;
+        document.getElementById("toastContainer").appendChild(toast);
+        setTimeout(()=> { toast.classList.remove("show"); toast.remove(); }, 5000);
+    }
+
+});
+</script>
+
+{% endblock %}

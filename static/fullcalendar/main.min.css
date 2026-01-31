@@ -1,0 +1,114 @@
+/* ===== FullCalendar CORE (Offline Minimal Build) ===== */
+
+.fc {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+  font-size: 14px;
+}
+
+.fc *,
+.fc *:before,
+.fc *:after {
+  box-sizing: border-box;
+}
+
+/* Header */
+.fc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.fc-toolbar-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.fc-button {
+  background: #0b3d91;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fc-button:hover {
+  background: #092f6e;
+}
+
+.fc-button:disabled {
+  opacity: 0.5;
+}
+
+/* TimeGrid layout */
+.fc-timegrid {
+  border-top: 1px solid #ddd;
+}
+
+.fc-timegrid-slot {
+  height: 60px;
+  border-bottom: 1px solid #eee;
+}
+
+.fc-timegrid-slot-label {
+  color: #555;
+  font-size: 12px;
+  padding-right: 8px;
+}
+
+.fc-timegrid-axis {
+  width: 60px;
+  background: #f8fafc;
+}
+
+/* Grid lines */
+.fc-timegrid-col {
+  border-left: 1px solid #eee;
+}
+
+/* Now indicator */
+.fc-now-indicator-line {
+  border-top: 2px solid red;
+}
+
+.fc-now-indicator-arrow {
+  border-color: red;
+}
+
+/* Events */
+.fc-event {
+  background: #2563eb;
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: 13px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.fc-event:hover {
+  opacity: 0.9;
+}
+
+.fc-event-title {
+  font-weight: 600;
+}
+
+/* Remove all-day row */
+.fc-timegrid-allday {
+  display: none;
+}
+
+/* Scroll */
+.fc-scroller {
+  overflow-y: auto;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .fc-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

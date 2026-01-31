@@ -1,0 +1,324 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CALME – Manager Panel</title>
+
+    <!-- OFFLINE BOOTSTRAP -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    
+    <style>
+        html, body { height:100%; margin:0; }
+
+        body{
+            background:#f4f6f9;
+            font-family:"Segoe UI", Arial, sans-serif;
+            overflow:hidden;
+        }
+
+        /* ================= HEADER ================= */
+        .header{
+            height:55px;
+            background:#7c2d12;
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:0 16px;
+            position:fixed;
+            top:0; left:0; right:0;
+            z-index:1000;
+        }
+
+        .header-left{
+            display:flex;
+            align-items:center;
+            gap:12px;
+        }
+
+        .header-left button{
+            background:none;
+            border:none;
+            color:white;
+            font-size:22px;
+            cursor:pointer;
+        }
+
+        .header-right{
+            display:flex;
+            align-items:center;
+            gap:12px;
+        }
+
+        .header-right input{
+            height:30px;
+            font-size:13px;
+            width:180px;
+        }
+
+        /* ================= SIDEBAR ================= */
+        #sidebar{
+            width:230px;
+            background:#9a3412;
+            position:fixed;
+            top:55px;
+            left:0;
+            bottom:0;
+            transition:.3s;
+            overflow-y:auto;
+        }
+
+        #sidebar.hide{ margin-left:-230px; }
+
+        #sidebar a{
+            display:block;
+            color:white;
+            padding:12px 18px;
+            font-size:14px;
+            text-decoration:none;
+        }
+
+        #sidebar a:hover{
+            background:#7c2d12;
+        }
+
+        /* ================= MAIN ================= */
+        #main{
+            position:fixed;
+            top:55px;
+            left:230px;
+            right:0;
+            bottom:36px;
+            padding:20px;
+            overflow-y:auto;
+            transition:.3s;
+        }
+
+        #main.full{ left:0; }
+
+        /* ================= FOOTER ================= */
+        .footer{
+            height:36px;
+            background:#7c2d12;
+            color:white;
+            text-align:center;
+            line-height:36px;
+            font-size:12px;
+            position:fixed;
+            bottom:0; left:0; right:0;
+        }
+
+        /* ================= FLOAT BTN ================= */
+        .floating-btn{
+            position:fixed;
+            right:20px;
+            bottom:60px;
+            background:#7c2d12;
+            color:white;
+            width:50px;
+            height:50px;
+            border-radius:50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:22px;
+            box-shadow:0 6px 12px rgba(0,0,0,.3);
+            text-decoration:none;
+            z-index:1200;
+        }
+
+        .floating-btn:hover{ background:#5a1f0c; }
+
+        /* ================= BELL SHAKE + PULSE ================= */
+        .bell-shake {
+            animation: bell-shake 0.8s ease;
+        }
+
+        @keyframes bell-shake {
+            0% { transform: rotate(0deg) scale(1); }
+            20% { transform: rotate(15deg) scale(1.1); }
+            40% { transform: rotate(-15deg) scale(1.1); }
+            60% { transform: rotate(10deg) scale(1.05); }
+            80% { transform: rotate(-5deg) scale(1.05); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        .floating-btn span {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            display: inline-block;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<div class="header">
+    <div class="header-left">
+        <button onclick="toggleSidebar()">☰</button>
+        <strong>CALME – Manager Panel</strong>
+    </div>
+
+    <div class="header-right">
+        <input type="text"
+               class="form-control form-control-sm"
+               placeholder="Search Employee"
+               id="employeeSearch">
+
+        <div>
+            <div>{{ request.user.username }}</div>
+            <small>Manager</small>
+        </div>
+    </div>
+</div>
+
+<!-- ================= SIDEBAR ================= -->
+<div id="sidebar">
+    <a href="{% url 'leaves:manager_dashboard' %}">📊 Dashboard</a>
+    <a href="{% url 'leaves:approve_manager' %}">✅ Approve Leaves</a>
+    <a href="{% url 'leaves:employee_history' %}">📄 Employee History</a>
+    <a href="{% url 'leaves:manager_advanced_calendar' %}">📅 Advanced Calendar</a>
+    <a href="{% url 'leaves:manager_notifications' %}">🔔 Notifications
+    {% if manager_pending_count > 0 %}
+        <span class="badge bg-danger">{{ manager_pending_count }}</span>
+    {% endif %}
+    </a>
+
+    <a href="/logout/">🚪 Logout</a>
+</div>
+
+<!-- ================= MAIN ================= -->
+<div id="main">
+    {% block content %}{% endblock %}
+</div>
+
+<!-- ================= FOOTER ================= -->
+<div class="footer">
+    © ADA | CALME – Offline Leave Management System
+</div>
+
+<!-- FLOATING NOTIFICATION -->
+<a href="{% url 'leaves:manager_notifications' %}" class="floating-btn">
+    🔔
+    {% if notification_count > 0 %}
+    <span style="
+        position:absolute;
+        top:5px;
+        right:5px;
+        background:red;
+        color:white;
+        font-size:11px;
+        padding:2px 6px;
+        border-radius:50%;
+    ">
+        {{ notification_count }}
+    </span>
+    {% endif %}
+</a>
+
+<script>
+function toggleSidebar(){
+    document.getElementById("sidebar").classList.toggle("hide");
+    document.getElementById("main").classList.toggle("full");
+}
+
+/* HEADER SEARCH – OPTIONAL PAGE-SPECIFIC USE */
+document.getElementById("employeeSearch").addEventListener("keyup", function(){
+    const value = this.value.toLowerCase();
+    document.querySelectorAll(".employee-row").forEach(row=>{
+        row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
+    });
+});
+</script>
+<script>
+function openConfirm(leaveId, action) {
+
+    let message = action === "approve"
+        ? "Are you sure you want to APPROVE this leave?"
+        : "Are you sure you want to REJECT this leave?";
+
+    if (!confirm(message)) {
+        return;
+    }
+
+    // Create form dynamically
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/manager/leave/" + action + "/" + leaveId + "/";
+
+    // CSRF token
+    const csrfInput = document.createElement("input");
+    csrfInput.type = "hidden";
+    csrfInput.name = "csrfmiddlewaretoken";
+    csrfInput.value = "{{ csrf_token }}";
+
+    form.appendChild(csrfInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+
+<!-- ================= FLOATING BELL DYNAMIC SCRIPT ================= -->
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+    let bellSpan = document.querySelector(".floating-btn span");
+
+    // If badge doesn't exist yet, create one
+    if(!bellSpan){
+        const bellBtn = document.querySelector(".floating-btn");
+        bellSpan = document.createElement("span");
+        bellSpan.style.cssText = `
+            position:absolute;
+            top:5px;
+            right:5px;
+            background:red;
+            color:white;
+            font-size:11px;
+            padding:2px 6px;
+            border-radius:50%;
+            display:none;
+        `;
+        bellBtn.appendChild(bellSpan);
+    }
+
+    let previousCount = 0;
+
+    async function updateNotificationCount(){
+        try{
+            const res = await fetch("{% url 'leaves:manager_notifications_count' %}");
+            const data = await res.json();
+            const count = data.pending_count;
+
+            if(count > 0){
+                bellSpan.innerText = count;
+                bellSpan.style.display = "inline-block";
+
+                // Animate only if count increased
+                if(count > previousCount){
+                    bellSpan.classList.add("bell-shake");
+                    setTimeout(()=> bellSpan.classList.remove("bell-shake"), 1000);
+                }
+
+            } else {
+                bellSpan.style.display = "none";
+            }
+
+            previousCount = count;
+
+        } catch(err){
+            console.error("Error fetching notification count:", err);
+        }
+    }
+
+    updateNotificationCount(); // initial fetch
+    setInterval(updateNotificationCount, 5000); // repeat every 5 sec
+});
+</script>
+
+</body>
+</html>

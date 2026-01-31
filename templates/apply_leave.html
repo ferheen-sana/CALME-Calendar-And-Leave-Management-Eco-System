@@ -1,0 +1,227 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+body{
+    background: linear-gradient(135deg,#f1f5f9,#e2e8f0);
+}
+.page-title{
+    font-weight:700;
+    color:#0b3d91;
+    margin-bottom:20px;
+}
+.glass-card{
+    background:rgba(255,255,255,0.9);
+    backdrop-filter: blur(12px);
+    border-radius:16px;
+    padding:30px;
+    box-shadow:0 12px 30px rgba(0,0,0,.15);
+    max-width:950px;
+}
+.form-label{font-weight:600;}
+.btn-apply{
+    background:linear-gradient(135deg,#0b3d91,#2563eb);
+    border:none;
+    padding:10px 30px;
+    border-radius:30px;
+    color:#fff;
+    font-weight:600;
+}
+</style>
+
+<h3 class="page-title">📝 Apply Leave</h3>
+
+<div class="glass-card">
+<form method="POST">
+{% csrf_token %}
+
+<!-- ROLE & BALANCE -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <label class="form-label">👤 Role</label>
+        <select name="role" id="role" class="form-select">
+            <option>Engineer</option>
+            <option>Consultant</option>
+            <option>PA</option>
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">📅 CL Balance</label>
+        <input id="cl" class="form-control text-center" value="{{ cl_balance }}" readonly>
+    </div>
+
+    <div class="col-md-4" id="rhBox">
+        <label class="form-label">🏖 RH Balance</label>
+        <input id="rh" class="form-control text-center" value="{{ rh_balance }}" readonly>
+    </div>
+    <div class="col-md-4">
+       <label class="form-label">📌 Leave Type</label>
+       <select name="leave_type" class="form-select" required>
+         <option value="">Select</option>
+         <option value="CL">CL</option>
+         <option value="RH">RH</option>
+       </select>
+    </div>
+
+</div>
+
+<hr>
+
+<!-- DATES -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <label class="form-label">📆 From</label>
+        <input type="date" name="from_date" id="fromDate" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">📆 To</label>
+        <input type="date" name="to_date" id="toDate" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">⏱ Day Type</label>
+        <select name="day_type" id="dayType" class="form-select">
+            <option value="FULL">Full Day</option>
+            <option value="HALF">Half Day</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">🕘 Half Day Slot</label>
+        <select name="half_slot" id="halfSlot" class="form-select" disabled>
+            <option value="">Select</option>
+            <option>Before Noon</option>
+            <option>After Noon</option>
+        </select>
+    </div>
+</div>
+
+<!-- TOTAL & REASON -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <label class="form-label">🔢 Total Days</label>
+        <input name="total_days" id="totalDays" class="form-control" readonly>
+    </div>
+    <div class="col-md-9">
+        <label class="form-label">📝 Reason</label>
+        <textarea name="reason" class="form-control" rows="3" required></textarea>
+    </div>
+</div>
+
+<div class="text-end">
+    <button class="btn btn-apply">✔ Apply</button>
+    <button type="reset" class="btn btn-outline-danger">✖ Cancel</button>
+</div>
+
+</form>
+</div>
+
+<script>
+const role = document.getElementById("role");
+const cl = document.getElementById("cl");
+const rh = document.getElementById("rh");
+const rhBox = document.getElementById("rhBox");
+const fromDate = document.getElementById("fromDate");
+const toDate = document.getElementById("toDate");
+const dayType = document.getElementById("dayType");
+const halfSlot = document.getElementById("halfSlot");
+const totalDays = document.getElementById("totalDays");
+const leaveType = document.querySelector('select[name="leave_type"]');
+leaveType.onchange = updateBalance;
+
+
+const availCL = 8;
+const availRH = 2;
+
+/* ===== ROLE CONTROL ===== */
+function applyRoleRules(){
+    if(role.value === "PA"){
+        rhBox.style.display = "block";
+        rh.value = availRH;
+    }else{
+        rhBox.style.display = "none";   // ❌ hide RH
+        rh.value = 0;                   // ❌ force zero
+    }
+    updateBalance();
+}
+role.onchange = applyRoleRules;
+applyRoleRules();
+
+/* ===== DAY TYPE ===== */
+dayType.onchange = () => {
+    if(dayType.value === "HALF"){
+        halfSlot.disabled = false;
+        toDate.value = fromDate.value;
+        totalDays.value = "0.5";
+    }else{
+        halfSlot.disabled = true;
+        halfSlot.value = "";
+        calcDays();
+    }
+};
+
+/* ===== DATE CALC ===== */
+function calcDays(){
+    if(!fromDate.value || !toDate.value) return;
+    const f = new Date(fromDate.value);
+    const t = new Date(toDate.value);
+    if(t < f) return;
+    totalDays.value = ((t - f)/(1000*3600*24)) + 1;
+}
+
+fromDate.onchange = toDate.onchange = () => {
+    calcDays();
+    updateBalance();
+};
+
+/* ===== BALANCE UPDATE ===== */
+function updateBalance(){
+    const days = parseFloat(totalDays.value || 0);
+    if(!days) return;
+
+    let remainingCL = availCL;
+    let remainingRH = availRH;
+
+    // Non-PA users → only CL
+    if(role.value !== "PA"){
+        remainingCL = Math.max(0, availCL - days);
+        cl.value = remainingCL;
+        rh.value = 0;
+        return;
+    }
+
+    // PA logic
+    if(leaveType.value === "RH"){
+        remainingRH = Math.max(0, availRH - days);
+        cl.value = availCL;   // CL untouched
+        rh.value = remainingRH;
+    }
+    else if(leaveType.value === "CL"){
+        remainingCL = Math.max(0, availCL - days);
+        cl.value = remainingCL;
+        rh.value = availRH;
+    }
+}
+
+</script>
+
+{% endblock %}
+<script>
+function notifyManager(employee, leave_type, from, to) {
+    let notifications = JSON.parse(
+        localStorage.getItem("manager_notifications") || "[]"
+    );
+
+    notifications.push({
+        employee: employee,
+        leave_type: leave_type,
+        from: from,
+        to: to,
+        time: new Date().toLocaleString()
+    });
+
+    localStorage.setItem(
+        "manager_notifications",
+        JSON.stringify(notifications)
+    );
+}
+</script>

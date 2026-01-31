@@ -1,0 +1,72 @@
+.zenday-wrapper {
+    position: relative;
+    height: calc(100vh - 120px);
+    background: linear-gradient(#79b9ff, #3b82f6);
+    overflow: hidden;
+}
+
+#zenday-scroll {
+    height: 100%;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    padding: 20px 0;
+}
+
+.zenday-day {
+    scroll-snap-align: start;
+    margin: 40px auto;
+    width: 90%;
+}
+
+.year {
+    font-size: 42px;
+    color: white;
+    opacity: 0.8;
+    margin-left: 10px;
+}
+
+.day-bar {
+    background: #b91c1c;
+    color: white;
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 6px;
+}
+
+.hours {
+    background: #eee;
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.hour {
+    height: 50px;
+    border-bottom: 1px solid #ccc;
+    color: #555;
+    padding-left: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.today .day-bar {
+    background: #dc2626;
+}
+
+/* Buttons */
+.nav-btn {
+    position: absolute;
+    right: 20px;
+    z-index: 10;
+    background: #ec4899;
+    color: white;
+    border: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.nav-btn.up { top: 20px; }
+.nav-btn.down { bottom: 20px; }
